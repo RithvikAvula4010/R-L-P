@@ -3,6 +3,7 @@ from game.board import Board
 from game.display import Display
 from agent.agent import Agent
 import time
+import os
 
 def train_agents(episodes: int = 10000) -> None:
     """Train two agents through self-play."""
@@ -11,7 +12,19 @@ def train_agents(episodes: int = 10000) -> None:
     agent_o = Agent(player=-1)
     display = Display()
     
+    # Try to load existing models
+    if os.path.exists("agent_x.pkl"):
+        print("Loading existing X agent model...")
+        agent_x.load_model("agent_x.pkl")
+    if os.path.exists("agent_o.pkl"):
+        print("Loading existing O agent model...")
+        agent_o.load_model("agent_o.pkl")
+    
     print("Training agents through self-play...")
+    wins_x = 0
+    wins_o = 0
+    draws = 0
+    
     for episode in range(episodes):
         board.reset()
         while not board.is_game_over():
@@ -30,11 +43,31 @@ def train_agents(episodes: int = 10000) -> None:
             if episode % 1000 == 0:
                 display.print_board(board.get_board())
                 time.sleep(0.1)
+        
+        # Track game outcomes
+        if board.winner == 1:
+            wins_x += 1
+        elif board.winner == -1:
+            wins_o += 1
+        else:
+            draws += 1
+        
+        # Print training progress
+        if (episode + 1) % 1000 == 0:
+            total_games = wins_x + wins_o + draws
+            print(f"\nTraining Progress (Episode {episode + 1}/{episodes})")
+            print(f"X wins: {wins_x/total_games:.2%}")
+            print(f"O wins: {wins_o/total_games:.2%}")
+            print(f"Draws: {draws/total_games:.2%}")
+            
+            # Save intermediate models
+            agent_x.save_model("agent_x.pkl")
+            agent_o.save_model("agent_o.pkl")
     
-    # Save trained models
+    # Save final models
     agent_x.save_model("agent_x.pkl")
     agent_o.save_model("agent_o.pkl")
-    print("Training completed!")
+    print("\nTraining completed!")
 
 def play_against_agent() -> None:
     """Play against a trained agent."""
@@ -43,7 +76,12 @@ def play_against_agent() -> None:
     
     # Load trained agent
     agent = Agent(player=-1)  # Agent plays as O
-    agent.load_model("agent_o.pkl")
+    if os.path.exists("agent_o.pkl"):
+        print("Loading trained O agent...")
+        agent.load_model("agent_o.pkl")
+    else:
+        print("No trained model found. Please train the agent first.")
+        return
     
     print("Playing against AI (O). You are X.")
     while not board.is_game_over():
