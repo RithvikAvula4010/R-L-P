@@ -1,0 +1,1026 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "gpuType": "T4",
+      "authorship_tag": "ABX9TyM4nRq1t0gzzVwocYOdGqf/",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    },
+    "accelerator": "GPU"
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/RithvikAvula4010/R-L-P/blob/main/Evolution%20Grid%20PPO\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "jB-F734CXgXU",
+        "outputId": "ad7b289c-676c-42e7-c3d3-a5d4c97e5bfd"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Found existing installation: torch 2.5.1+cu121\n",
+            "Uninstalling torch-2.5.1+cu121:\n",
+            "  Successfully uninstalled torch-2.5.1+cu121\n",
+            "Looking in indexes: https://download.pytorch.org/whl/cu121\n",
+            "Collecting torch\n",
+            "  Using cached https://download.pytorch.org/whl/cu121/torch-2.5.1%2Bcu121-cp311-cp311-linux_x86_64.whl (780.5 MB)\n",
+            "Requirement already satisfied: torchvision in /usr/local/lib/python3.11/dist-packages (0.20.1+cu121)\n",
+            "Requirement already satisfied: torchaudio in /usr/local/lib/python3.11/dist-packages (2.5.1+cu121)\n",
+            "Requirement already satisfied: filelock in /usr/local/lib/python3.11/dist-packages (from torch) (3.18.0)\n",
+            "Requirement already satisfied: typing-extensions>=4.8.0 in /usr/local/lib/python3.11/dist-packages (from torch) (4.14.1)\n",
+            "Requirement already satisfied: networkx in /usr/local/lib/python3.11/dist-packages (from torch) (3.5)\n",
+            "Requirement already satisfied: jinja2 in /usr/local/lib/python3.11/dist-packages (from torch) (3.1.6)\n",
+            "Requirement already satisfied: fsspec in /usr/local/lib/python3.11/dist-packages (from torch) (2025.7.0)\n",
+            "Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.1.105 in /usr/local/lib/python3.11/dist-packages (from torch) (12.1.105)\n",
+            "Requirement already satisfied: nvidia-cuda-runtime-cu12==12.1.105 in /usr/local/lib/python3.11/dist-packages (from torch) (12.1.105)\n",
+            "Requirement already satisfied: nvidia-cuda-cupti-cu12==12.1.105 in /usr/local/lib/python3.11/dist-packages (from torch) (12.1.105)\n",
+            "Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /usr/local/lib/python3.11/dist-packages (from torch) (9.1.0.70)\n",
+            "Requirement already satisfied: nvidia-cublas-cu12==12.1.3.1 in /usr/local/lib/python3.11/dist-packages (from torch) (12.1.3.1)\n",
+            "Requirement already satisfied: nvidia-cufft-cu12==11.0.2.54 in /usr/local/lib/python3.11/dist-packages (from torch) (11.0.2.54)\n",
+            "Requirement already satisfied: nvidia-curand-cu12==10.3.2.106 in /usr/local/lib/python3.11/dist-packages (from torch) (10.3.2.106)\n",
+            "Requirement already satisfied: nvidia-cusolver-cu12==11.4.5.107 in /usr/local/lib/python3.11/dist-packages (from torch) (11.4.5.107)\n",
+            "Requirement already satisfied: nvidia-cusparse-cu12==12.1.0.106 in /usr/local/lib/python3.11/dist-packages (from torch) (12.1.0.106)\n",
+            "Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /usr/local/lib/python3.11/dist-packages (from torch) (2.21.5)\n",
+            "Requirement already satisfied: nvidia-nvtx-cu12==12.1.105 in /usr/local/lib/python3.11/dist-packages (from torch) (12.1.105)\n",
+            "Requirement already satisfied: triton==3.1.0 in /usr/local/lib/python3.11/dist-packages (from torch) (3.1.0)\n",
+            "Requirement already satisfied: sympy==1.13.1 in /usr/local/lib/python3.11/dist-packages (from torch) (1.13.1)\n",
+            "Requirement already satisfied: nvidia-nvjitlink-cu12 in /usr/local/lib/python3.11/dist-packages (from nvidia-cusolver-cu12==11.4.5.107->torch) (12.5.82)\n",
+            "Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from sympy==1.13.1->torch) (1.3.0)\n",
+            "Requirement already satisfied: numpy in /usr/local/lib/python3.11/dist-packages (from torchvision) (2.0.2)\n",
+            "Requirement already satisfied: pillow!=8.3.*,>=5.3.0 in /usr/local/lib/python3.11/dist-packages (from torchvision) (11.3.0)\n",
+            "Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.11/dist-packages (from jinja2->torch) (3.0.2)\n",
+            "Installing collected packages: torch\n",
+            "Successfully installed torch-2.5.1+cu121\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Run this in a new cell\n",
+        "!pip uninstall torch -y\n",
+        "!pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import torch\n",
+        "\n",
+        "# This should now return True\n",
+        "print(f\"Is CUDA available? {torch.cuda.is_available()}\")\n",
+        "\n",
+        "if torch.cuda.is_available():\n",
+        "    # This should print 'NVIDIA T4' or similar\n",
+        "    print(f\"GPU Device: {torch.cuda.get_device_name(0)}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4NVDjd9cad4S",
+        "outputId": "af99eb70-b385-4701-97e4-a02fd51f6f36"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Is CUDA available? True\n",
+            "GPU Device: Tesla T4\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os\n",
+        "\n",
+        "# Suppress TensorFlow warnings if it's pre-installed in Colab\n",
+        "os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'\n",
+        "\n",
+        "directories = [\n",
+        "    '/content/environment',\n",
+        "    '/content/agents',\n",
+        "    '/content/training',\n",
+        "    '/content/checkpoints'\n",
+        "]\n",
+        "\n",
+        "for directory in directories:\n",
+        "    if not os.path.exists(directory):\n",
+        "        os.makedirs(directory)\n",
+        "\n",
+        "print(\"✅ Directories created successfully.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "YI7ycQe3YXzP",
+        "outputId": "b5631f7c-8bfa-4be3-ff98-3598a5d64301"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "✅ Directories created successfully.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/environment/food_manager.py\n",
+        "import numpy as np\n",
+        "\n",
+        "class FoodManager:\n",
+        "    \"\"\"Manages food spawning, consumption, and region-specific rules.\"\"\"\n",
+        "    def __init__(self, grid_size, region_bounds):\n",
+        "        self.grid_size = grid_size\n",
+        "        self.region_bounds = region_bounds\n",
+        "        self.food_locations = set()\n",
+        "        self.region_food_active = {1: False, 2: False, 3: False, 4: False}\n",
+        "\n",
+        "    def activate_region(self, region_idx):\n",
+        "        \"\"\"Spawns food in a region if it's not already active.\"\"\"\n",
+        "        if not self.region_food_active[region_idx]:\n",
+        "            self.region_food_active[region_idx] = True\n",
+        "            min_x, max_x = self.region_bounds[region_idx]['x']\n",
+        "            min_y, max_y = self.region_bounds[region_idx]['y']\n",
+        "\n",
+        "            num_food = np.random.randint(3, 6)\n",
+        "            for _ in range(num_food):\n",
+        "                # Ensure food doesn't spawn on the terminal state\n",
+        "                while True:\n",
+        "                    pos = (np.random.randint(min_x, max_x + 1), np.random.randint(min_y, max_y + 1))\n",
+        "                    if pos != (63, 63):\n",
+        "                        self.food_locations.add(pos)\n",
+        "                        break\n",
+        "            return True\n",
+        "        return False\n",
+        "\n",
+        "    def consume_food(self, position):\n",
+        "        \"\"\"Consumes food at the given position.\"\"\"\n",
+        "        if position in self.food_locations:\n",
+        "            self.food_locations.remove(position)\n",
+        "            return True\n",
+        "        return False\n",
+        "\n",
+        "    def clear_region_food(self, region_idx):\n",
+        "        \"\"\"Clears food from a region when the agent leaves.\"\"\"\n",
+        "        self.region_food_active[region_idx] = False\n",
+        "        bounds = self.region_bounds[region_idx]\n",
+        "        food_to_remove = {\n",
+        "            pos for pos in self.food_locations\n",
+        "            if bounds['x'][0] <= pos[0] <= bounds['x'][1] and bounds['y'][0] <= pos[1] <= bounds['y'][1]\n",
+        "        }\n",
+        "        self.food_locations -= food_to_remove\n",
+        "\n",
+        "    def reset(self):\n",
+        "        \"\"\"Resets all food and region activations.\"\"\"\n",
+        "        self.food_locations.clear()\n",
+        "        self.region_food_active = {1: False, 2: False, 3: False, 4: False}"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "8ZE7Wp7YYhtJ",
+        "outputId": "deece6ab-788d-4b3c-ce91-3609d7bd602e"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Overwriting /content/environment/food_manager.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/environment/evolution_world.py\n",
+        "import gym\n",
+        "import numpy as np\n",
+        "from gym import spaces\n",
+        "from .food_manager import FoodManager\n",
+        "\n",
+        "class EvolutionWorldEnv(gym.Env):\n",
+        "    \"\"\"The main environment class for the evolution simulation. (CORRECTED with 2-evolution limit)\"\"\"\n",
+        "    metadata = {'render.modes': ['human', 'rgb_array']}\n",
+        "\n",
+        "    def __init__(self):\n",
+        "        super(EvolutionWorldEnv, self).__init__()\n",
+        "        self.grid_size = 64\n",
+        "        self.max_steps_without_food = 15\n",
+        "        self.total_steps = 0\n",
+        "        self.max_episode_steps = 400 # Prevents infinite loops\n",
+        "\n",
+        "        # Action Space: [L, R, U, D, STAY, FLY, DRILL, SWIM]\n",
+        "        self.action_space = spaces.Discrete(8)\n",
+        "        self.action_map = {\n",
+        "            0: 'MOVE_LEFT', 1: 'MOVE_RIGHT', 2: 'MOVE_UP', 3: 'MOVE_DOWN', 4: 'STAY',\n",
+        "            5: 'EVOLVE_FLYING', 6: 'EVOLVE_DRILLING', 7: 'EVOLVE_SWIMMING'\n",
+        "        }\n",
+        "\n",
+        "        # Observation Space: 4 channels (agent_pos, food_pos, terrain_type, abilities)\n",
+        "        self.observation_space = spaces.Box(\n",
+        "            low=0, high=1, shape=(self.grid_size, self.grid_size, 4), dtype=np.float32\n",
+        "        )\n",
+        "\n",
+        "        # Region definitions\n",
+        "        self.region_bounds = {\n",
+        "            1: {'x': (0, 31), 'y': (0, 31)},  # Land 1\n",
+        "            2: {'x': (32, 63), 'y': (0, 31)}, # Water 1\n",
+        "            3: {'x': (0, 31), 'y': (32, 63)}, # Land 2\n",
+        "            4: {'x': (32, 63), 'y': (32, 63)}  # Water 2\n",
+        "        }\n",
+        "        self.terminal_state_pos = (63, 63)\n",
+        "        self.food_manager = FoodManager(self.grid_size, self.region_bounds)\n",
+        "\n",
+        "    def _get_state_info(self):\n",
+        "        \"\"\"Returns the info dict.\"\"\"\n",
+        "        return {\n",
+        "            'agent_position': self.agent_pos,\n",
+        "            'evolved_abilities': list(self.evolved_abilities.values()),\n",
+        "            'steps_since_last_food': self.steps_since_last_food,\n",
+        "            'current_region': self.current_region,\n",
+        "        }\n",
+        "\n",
+        "    def _get_observation(self):\n",
+        "        \"\"\"Constructs the 4-channel observation tensor.\"\"\"\n",
+        "        obs = np.zeros((self.grid_size, self.grid_size, 4), dtype=np.float32)\n",
+        "        obs[self.agent_pos[0], self.agent_pos[1], 0] = 1.0\n",
+        "        for x, y in self.food_manager.food_locations:\n",
+        "            obs[x, y, 1] = 1.0\n",
+        "        obs[self.region_bounds[2]['x'][0]:self.region_bounds[2]['x'][1]+1, self.region_bounds[2]['y'][0]:self.region_bounds[2]['y'][1]+1, 2] = 0.5\n",
+        "        obs[self.region_bounds[3]['x'][0]:self.region_bounds[3]['x'][1]+1, self.region_bounds[3]['y'][0]:self.region_bounds[3]['y'][1]+1, 2] = 0.75\n",
+        "        obs[self.region_bounds[4]['x'][0]:self.region_bounds[4]['x'][1]+1, self.region_bounds[4]['y'][0]:self.region_bounds[4]['y'][1]+1, 2] = 1.0\n",
+        "        ability_value = 0.0\n",
+        "        if self.evolved_abilities['flying']: ability_value += 0.3\n",
+        "        if self.evolved_abilities['drilling']: ability_value += 0.3\n",
+        "        if self.evolved_abilities['swimming']: ability_value += 0.3\n",
+        "        obs[:, :, 3] = ability_value\n",
+        "        return obs\n",
+        "\n",
+        "    def _get_current_region(self, position):\n",
+        "        x, y = position\n",
+        "        for idx, bounds in self.region_bounds.items():\n",
+        "            if bounds['x'][0] <= x <= bounds['x'][1] and bounds['y'][0] <= y <= bounds['y'][1]:\n",
+        "                return idx\n",
+        "        return -1\n",
+        "\n",
+        "    def reset(self):\n",
+        "        self.agent_pos = (np.random.randint(0, 32), np.random.randint(0, 32))\n",
+        "        self.evolved_abilities = {'flying': False, 'drilling': False, 'swimming': False}\n",
+        "        self.steps_since_last_food = 0\n",
+        "        self.total_steps = 0\n",
+        "        self.num_evolutions = 0\n",
+        "        self.current_region = 1\n",
+        "        self.food_manager.reset()\n",
+        "        self.food_manager.activate_region(1)\n",
+        "        return self._get_observation()\n",
+        "\n",
+        "    def step(self, action):\n",
+        "        self.total_steps += 1\n",
+        "        reward = 0\n",
+        "        done = False\n",
+        "        action_type = self.action_map[action]\n",
+        "\n",
+        "        if action_type.startswith('EVOLVE'):\n",
+        "            ability_key = action_type.split('_')[1].lower()\n",
+        "\n",
+        "            # --- MODIFICATION IS HERE ---\n",
+        "            # Check if the agent has room to evolve AND if the ability is new.\n",
+        "            if self.num_evolutions < 2 and not self.evolved_abilities[ability_key]:\n",
+        "                # Successful evolution\n",
+        "                reward += 5.0\n",
+        "                self.evolved_abilities[ability_key] = True\n",
+        "\n",
+        "                if self.num_evolutions == 0:\n",
+        "                    reward += 3.0 # First evolution bonus\n",
+        "\n",
+        "                self.num_evolutions += 1 # Increment the counter\n",
+        "            else:\n",
+        "                # Penalize any invalid evolution attempt (either a duplicate or exceeding the limit)\n",
+        "                reward -= 1.0\n",
+        "\n",
+        "        else: # MOVEMENT ACTIONS\n",
+        "            reward -= 0.5\n",
+        "            self.steps_since_last_food += 1\n",
+        "            x, y = self.agent_pos\n",
+        "            if action_type == 'MOVE_LEFT': x = max(0, x - 1)\n",
+        "            elif action_type == 'MOVE_RIGHT': x = min(self.grid_size - 1, x + 1)\n",
+        "            elif action_type == 'MOVE_UP': y = min(self.grid_size - 1, y + 1)\n",
+        "            elif action_type == 'MOVE_DOWN': y = max(0, y - 1)\n",
+        "            self.agent_pos = (x, y)\n",
+        "\n",
+        "        # Region checks\n",
+        "        new_region = self._get_current_region(self.agent_pos)\n",
+        "        if new_region != self.current_region:\n",
+        "            if new_region > self.current_region: reward += 2.0\n",
+        "            else: reward -= 1.0\n",
+        "            self.food_manager.activate_region(new_region)\n",
+        "            self.current_region = new_region\n",
+        "\n",
+        "        # Food consumption\n",
+        "        can_eat = False\n",
+        "        if self.current_region == 1: can_eat = True\n",
+        "        elif self.current_region == 2 and (self.evolved_abilities['flying'] or self.evolved_abilities['swimming']): can_eat = True\n",
+        "        elif self.current_region == 3 and self.evolved_abilities['drilling']: can_eat = True\n",
+        "        elif self.current_region == 4 and self.evolved_abilities['swimming']: can_eat = True\n",
+        "\n",
+        "        if self.food_manager.consume_food(self.agent_pos):\n",
+        "            if can_eat:\n",
+        "                reward += 3.0\n",
+        "                if self.steps_since_last_food <= 3: reward += 1.0\n",
+        "                self.steps_since_last_food = 0\n",
+        "            else:\n",
+        "                reward -= 2.0\n",
+        "\n",
+        "        # --- TERMINAL CONDITIONS ---\n",
+        "        if self.steps_since_last_food >= self.max_steps_without_food:\n",
+        "            reward -= 15.0\n",
+        "            done = True\n",
+        "        if self.agent_pos == self.terminal_state_pos:\n",
+        "            reward += 20.0\n",
+        "            done = True\n",
+        "        if self.total_steps >= self.max_episode_steps:\n",
+        "            done = True\n",
+        "\n",
+        "        obs = self._get_observation()\n",
+        "        info = self._get_state_info()\n",
+        "        return obs, reward, done, info"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "uXs5IiBVYojj",
+        "outputId": "2b0c8c75-5b43-48f1-ef94-a409e9fb2d68"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Overwriting /content/environment/evolution_world.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/agents/network_architecture.py\n",
+        "import torch\n",
+        "import torch.nn as nn\n",
+        "import torch.nn.functional as F\n",
+        "\n",
+        "class PolicyNetwork(nn.Module):\n",
+        "    \"\"\"PPO Policy and Value Network.\"\"\"\n",
+        "    def __init__(self, num_actions):\n",
+        "        super(PolicyNetwork, self).__init__()\n",
+        "\n",
+        "        self.conv_layers = nn.Sequential(\n",
+        "            nn.Conv2d(4, 32, kernel_size=8, stride=4), nn.ReLU(),\n",
+        "            nn.Conv2d(32, 64, kernel_size=4, stride=2), nn.ReLU(),\n",
+        "            nn.Conv2d(64, 64, kernel_size=3, stride=1), nn.ReLU(),\n",
+        "            nn.Flatten()\n",
+        "        )\n",
+        "\n",
+        "        # Calculate flattened size after convolutions on a 64x64 grid\n",
+        "        # Conv1: (64-8)/4 + 1 = 15 -> 15x15\n",
+        "        # Conv2: (15-4)/2 + 1 = 6.5 -> 6 -> 6x6\n",
+        "        # Conv3: (6-3)/1 + 1 = 4 -> 4x4\n",
+        "        conv_out_size = 64 * 4 * 4\n",
+        "\n",
+        "        self.fc_layers = nn.Sequential(\n",
+        "            nn.Linear(conv_out_size, 512), nn.ReLU()\n",
+        "            # Removed second dense layer to simplify\n",
+        "        )\n",
+        "\n",
+        "        self.policy_head = nn.Linear(512, num_actions)\n",
+        "        self.value_head = nn.Linear(512, 1)\n",
+        "\n",
+        "    def forward(self, x):\n",
+        "        # PyTorch expects (N, C, H, W)\n",
+        "        x = x.permute(0, 3, 1, 2)\n",
+        "        x = self.conv_layers(x)\n",
+        "        x = self.fc_layers(x)\n",
+        "\n",
+        "        action_probs = F.softmax(self.policy_head(x), dim=-1)\n",
+        "        value = self.value_head(x)\n",
+        "\n",
+        "        return action_probs, value"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "lwD8YP93Yu-t",
+        "outputId": "a6fa5079-ff9c-47ec-af7b-508f81a6aedc"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Overwriting /content/agents/network_architecture.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/agents/ppo_agent.py\n",
+        "import torch\n",
+        "import torch.nn as nn\n",
+        "from torch.distributions import Categorical\n",
+        "import numpy as np\n",
+        "from .network_architecture import PolicyNetwork\n",
+        "\n",
+        "class PPOAgent:\n",
+        "    \"\"\"The PPO Agent.\"\"\"\n",
+        "    def __init__(self, num_actions, ppo_config, device):\n",
+        "        self.device = device\n",
+        "        self.gamma = ppo_config['gamma']\n",
+        "        self.gae_lambda = ppo_config['gae_lambda']\n",
+        "        self.clip_range = ppo_config['clip_range']\n",
+        "        self.n_epochs = ppo_config['n_epochs']\n",
+        "        self.ent_coef = ppo_config['ent_coef']\n",
+        "        self.vf_coef = ppo_config['vf_coef']\n",
+        "        self.max_grad_norm = ppo_config['max_grad_norm']\n",
+        "        self.batch_size = ppo_config['batch_size']\n",
+        "\n",
+        "        self.policy = PolicyNetwork(num_actions).to(self.device)\n",
+        "        self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=ppo_config['learning_rate'])\n",
+        "        self.memory = []\n",
+        "\n",
+        "    def store_transition(self, state, action, log_prob, reward, done, value):\n",
+        "        self.memory.append((state, action, log_prob, reward, done, value))\n",
+        "\n",
+        "    def clear_memory(self):\n",
+        "        self.memory = []\n",
+        "\n",
+        "    def select_action(self, state):\n",
+        "        with torch.no_grad():\n",
+        "            state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)\n",
+        "            action_probs, value = self.policy(state_tensor)\n",
+        "            dist = Categorical(action_probs)\n",
+        "            action = dist.sample()\n",
+        "            log_prob = dist.log_prob(action)\n",
+        "        return action.item(), log_prob.item(), value.item()\n",
+        "\n",
+        "    def update(self):\n",
+        "        if not self.memory:\n",
+        "            return\n",
+        "\n",
+        "        # Unpack memory\n",
+        "        states, actions, old_log_probs, rewards, dones, values = zip(*self.memory)\n",
+        "\n",
+        "        # Calculate advantages using GAE\n",
+        "        advantages = np.zeros(len(rewards), dtype=np.float32)\n",
+        "        last_advantage = 0\n",
+        "        last_value = values[-1]\n",
+        "        for t in reversed(range(len(rewards))):\n",
+        "            mask = 1.0 - dones[t]\n",
+        "            delta = rewards[t] + self.gamma * last_value * mask - values[t]\n",
+        "            advantages[t] = delta + self.gamma * self.gae_lambda * last_advantage * mask\n",
+        "            last_advantage = advantages[t]\n",
+        "            last_value = values[t]\n",
+        "\n",
+        "        returns = advantages + np.array(values)\n",
+        "\n",
+        "        # Convert to tensors\n",
+        "        states = torch.FloatTensor(np.array(states)).to(self.device)\n",
+        "        actions = torch.LongTensor(actions).to(self.device)\n",
+        "        old_log_probs = torch.FloatTensor(old_log_probs).to(self.device)\n",
+        "        advantages = torch.FloatTensor(advantages).to(self.device)\n",
+        "        returns = torch.FloatTensor(returns).to(self.device)\n",
+        "\n",
+        "        # Perform PPO update for n_epochs\n",
+        "        for _ in range(self.n_epochs):\n",
+        "            # Batching\n",
+        "            for index in range(0, len(states), self.batch_size):\n",
+        "                batch_indices = slice(index, index + self.batch_size)\n",
+        "\n",
+        "                action_probs, current_values = self.policy(states[batch_indices])\n",
+        "                current_values = current_values.squeeze()\n",
+        "                dist = Categorical(action_probs)\n",
+        "                new_log_probs = dist.log_prob(actions[batch_indices])\n",
+        "                entropy = dist.entropy().mean()\n",
+        "\n",
+        "                ratio = torch.exp(new_log_probs - old_log_probs[batch_indices])\n",
+        "                surr1 = ratio * advantages[batch_indices]\n",
+        "                surr2 = torch.clamp(ratio, 1 - self.clip_range, 1 + self.clip_range) * advantages[batch_indices]\n",
+        "\n",
+        "                policy_loss = -torch.min(surr1, surr2).mean()\n",
+        "                value_loss = nn.MSELoss()(current_values, returns[batch_indices])\n",
+        "                loss = policy_loss + self.vf_coef * value_loss - self.ent_coef * entropy\n",
+        "\n",
+        "                self.optimizer.zero_grad()\n",
+        "                loss.backward()\n",
+        "                nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)\n",
+        "                self.optimizer.step()\n",
+        "\n",
+        "        self.clear_memory()\n",
+        "\n",
+        "    def save_model(self, path):\n",
+        "        torch.save(self.policy.state_dict(), path)\n",
+        "\n",
+        "    def load_model(self, path):\n",
+        "        self.policy.load_state_dict(torch.load(path, map_location=self.device))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "WeQFguAXYy-2",
+        "outputId": "82f69f54-15fd-4728-fb49-18f049b32e29"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Overwriting /content/agents/ppo_agent.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/training/curriculum.py\n",
+        "class Curriculum:\n",
+        "    \"\"\"Defines curriculum learning phases.\"\"\"\n",
+        "    def get_phase(self, episode):\n",
+        "        if 1 <= episode <= 500:\n",
+        "            return 1, \"Phase 1: Basic Survival in Land 1\"\n",
+        "        elif 501 <= episode <= 1500:\n",
+        "            return 2, \"Phase 2: Introducing Evolution\"\n",
+        "        elif 1501 <= episode <= 3000:\n",
+        "            return 3, \"Phase 3: Full Environment Access\"\n",
+        "        else:\n",
+        "            return 4, \"Phase 4: Fine-tuning\""
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "59VE1n2pY73s",
+        "outputId": "45d440bc-513b-4986-9a8c-da34c9e04c3d"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Overwriting /content/training/curriculum.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/training/trainer.py\n",
+        "import numpy as np\n",
+        "import os\n",
+        "from collections import deque\n",
+        "import gc\n",
+        "\n",
+        "class Trainer:\n",
+        "    \"\"\"Manages the main training loop.\"\"\"\n",
+        "    def __init__(self, env, agent, curriculum, num_episodes, update_timestep):\n",
+        "        self.env = env\n",
+        "        self.agent = agent\n",
+        "        self.curriculum = curriculum\n",
+        "        self.num_episodes = num_episodes\n",
+        "        self.update_timestep = update_timestep\n",
+        "        self.checkpoint_dir = '/content/checkpoints'\n",
+        "\n",
+        "    def train(self):\n",
+        "        print(\"🚀 Starting Training...\")\n",
+        "        current_phase = 0\n",
+        "\n",
+        "        terminal_reaches = deque(maxlen=100)\n",
+        "        episode_lengths = deque(maxlen=100)\n",
+        "        episode_rewards = deque(maxlen=100)\n",
+        "\n",
+        "        timestep = 0\n",
+        "        for episode in range(1, self.num_episodes + 1):\n",
+        "            phase, phase_desc = self.curriculum.get_phase(episode)\n",
+        "            if phase != current_phase:\n",
+        "                print(f\"\\n--- Entering {phase_desc} (Episode {episode}) ---\")\n",
+        "                current_phase = phase\n",
+        "\n",
+        "            state = self.env.reset()\n",
+        "            done = False\n",
+        "            ep_reward = 0\n",
+        "\n",
+        "            for t in range(self.env.max_episode_steps):\n",
+        "                timestep += 1\n",
+        "\n",
+        "                action, log_prob, value = self.agent.select_action(state)\n",
+        "                next_state, reward, done, info = self.env.step(action)\n",
+        "\n",
+        "                self.agent.store_transition(state, action, log_prob, reward, done, value)\n",
+        "\n",
+        "                if timestep % self.update_timestep == 0:\n",
+        "                    self.agent.update()\n",
+        "                    gc.collect() # Garbage collection\n",
+        "\n",
+        "                state = next_state\n",
+        "                ep_reward += reward\n",
+        "                if done: break\n",
+        "\n",
+        "            episode_lengths.append(self.env.total_steps)\n",
+        "            episode_rewards.append(ep_reward)\n",
+        "            terminal_reaches.append(1 if info['agent_position'] == (63, 63) else 0)\n",
+        "\n",
+        "            if episode % 100 == 0:\n",
+        "                avg_reward = np.mean(episode_rewards)\n",
+        "                avg_length = np.mean(episode_lengths)\n",
+        "                terminal_rate = np.mean(terminal_reaches) * 100\n",
+        "                print(f\"Ep {episode}/{self.num_episodes} | Avg Reward: {avg_reward:.2f} | Avg Length: {avg_length:.2f} | Terminal Reach: {terminal_rate:.1f}%\")\n",
+        "\n",
+        "            if episode % 1000 == 0:\n",
+        "                path = os.path.join(self.checkpoint_dir, f'ppo_model_ep_{episode}.pth')\n",
+        "                self.agent.save_model(path)\n",
+        "                print(f\"💾 Model checkpoint saved to {path}\")\n",
+        "\n",
+        "        print(\"✅ Training finished.\")\n",
+        "        final_path = os.path.join(self.checkpoint_dir, 'ppo_model_final.pth')\n",
+        "        self.agent.save_model(final_path)\n",
+        "        print(f\"💾 Final model saved to {final_path}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "FpZWE7CVY9lS",
+        "outputId": "58d23a5e-e907-4894-82b9-d07661620113"
+      },
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Overwriting /content/training/trainer.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/main.py\n",
+        "import torch\n",
+        "import warnings\n",
+        "from environment.evolution_world import EvolutionWorldEnv\n",
+        "from agents.ppo_agent import PPOAgent\n",
+        "from training.trainer import Trainer\n",
+        "from training.curriculum import Curriculum\n",
+        "\n",
+        "# Suppress gym user warnings\n",
+        "warnings.filterwarnings(\"ignore\", category=UserWarning, module='gym')\n",
+        "\n",
+        "def main():\n",
+        "    print(\"Initializing Simulation...\")\n",
+        "\n",
+        "    NUM_EPISODES = 5000\n",
+        "    UPDATE_TIMESTEP = 2048\n",
+        "\n",
+        "    ppo_config = {\n",
+        "        'learning_rate': 3e-4,\n",
+        "        'batch_size': 64,\n",
+        "        'n_epochs': 10,\n",
+        "        'gamma': 0.99,\n",
+        "        'gae_lambda': 0.95,\n",
+        "        'clip_range': 0.2,\n",
+        "        'ent_coef': 0.01,\n",
+        "        'vf_coef': 0.5,\n",
+        "        'max_grad_norm': 0.5\n",
+        "    }\n",
+        "\n",
+        "    device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n",
+        "    print(f\"Using device: {device}\")\n",
+        "\n",
+        "    env = EvolutionWorldEnv()\n",
+        "    num_actions = env.action_space.n\n",
+        "\n",
+        "    agent = PPOAgent(num_actions, ppo_config, device)\n",
+        "    curriculum = Curriculum()\n",
+        "\n",
+        "    trainer = Trainer(\n",
+        "        env=env,\n",
+        "        agent=agent,\n",
+        "        curriculum=curriculum,\n",
+        "        num_episodes=NUM_EPISODES,\n",
+        "        update_timestep=UPDATE_TIMESTEP\n",
+        "    )\n",
+        "    trainer.train()\n",
+        "\n",
+        "if __name__ == '__main__':\n",
+        "    main()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "3w8f4ummZGCH",
+        "outputId": "83fcece5-49d6-4bac-8e6a-7f18bc902733"
+      },
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Overwriting /content/main.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!python main.py"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "-s6XD7HPZNyN",
+        "outputId": "6c19b87c-a99f-46f5-fb4a-4255faa05829"
+      },
+      "execution_count": 11,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Initializing Simulation...\n",
+            "Using device: cuda\n",
+            "🚀 Starting Training...\n",
+            "\n",
+            "--- Entering Phase 1: Basic Survival in Land 1 (Episode 1) ---\n",
+            "Ep 100/5000 | Avg Reward: -15.86 | Avg Length: 23.74 | Terminal Reach: 0.0%\n",
+            "Ep 200/5000 | Avg Reward: -16.77 | Avg Length: 24.54 | Terminal Reach: 0.0%\n",
+            "Ep 300/5000 | Avg Reward: -15.54 | Avg Length: 23.29 | Terminal Reach: 0.0%\n",
+            "Ep 400/5000 | Avg Reward: -13.72 | Avg Length: 21.63 | Terminal Reach: 0.0%\n",
+            "Ep 500/5000 | Avg Reward: -12.98 | Avg Length: 19.52 | Terminal Reach: 0.0%\n",
+            "\n",
+            "--- Entering Phase 2: Introducing Evolution (Episode 501) ---\n",
+            "Ep 600/5000 | Avg Reward: -11.72 | Avg Length: 18.69 | Terminal Reach: 0.0%\n",
+            "Ep 700/5000 | Avg Reward: -11.90 | Avg Length: 19.25 | Terminal Reach: 0.0%\n",
+            "Ep 800/5000 | Avg Reward: -11.95 | Avg Length: 19.47 | Terminal Reach: 0.0%\n",
+            "Ep 900/5000 | Avg Reward: -12.01 | Avg Length: 19.91 | Terminal Reach: 0.0%\n",
+            "Ep 1000/5000 | Avg Reward: -11.84 | Avg Length: 19.45 | Terminal Reach: 0.0%\n",
+            "💾 Model checkpoint saved to /content/checkpoints/ppo_model_ep_1000.pth\n",
+            "Ep 1100/5000 | Avg Reward: -10.92 | Avg Length: 18.46 | Terminal Reach: 0.0%\n",
+            "Ep 1200/5000 | Avg Reward: -10.66 | Avg Length: 18.27 | Terminal Reach: 0.0%\n",
+            "Ep 1300/5000 | Avg Reward: -10.27 | Avg Length: 18.02 | Terminal Reach: 0.0%\n",
+            "Ep 1400/5000 | Avg Reward: -10.09 | Avg Length: 17.41 | Terminal Reach: 0.0%\n",
+            "Ep 1500/5000 | Avg Reward: -9.58 | Avg Length: 17.38 | Terminal Reach: 0.0%\n",
+            "\n",
+            "--- Entering Phase 3: Full Environment Access (Episode 1501) ---\n",
+            "Ep 1600/5000 | Avg Reward: -9.66 | Avg Length: 17.24 | Terminal Reach: 0.0%\n",
+            "Ep 1700/5000 | Avg Reward: -9.60 | Avg Length: 17.46 | Terminal Reach: 0.0%\n",
+            "Ep 1800/5000 | Avg Reward: -9.75 | Avg Length: 17.36 | Terminal Reach: 0.0%\n",
+            "Ep 1900/5000 | Avg Reward: -9.90 | Avg Length: 17.69 | Terminal Reach: 0.0%\n",
+            "Ep 2000/5000 | Avg Reward: -9.54 | Avg Length: 17.37 | Terminal Reach: 0.0%\n",
+            "💾 Model checkpoint saved to /content/checkpoints/ppo_model_ep_2000.pth\n",
+            "Ep 2100/5000 | Avg Reward: -9.59 | Avg Length: 17.14 | Terminal Reach: 0.0%\n",
+            "Ep 2200/5000 | Avg Reward: -9.53 | Avg Length: 17.38 | Terminal Reach: 0.0%\n",
+            "Ep 2300/5000 | Avg Reward: -9.62 | Avg Length: 17.44 | Terminal Reach: 0.0%\n",
+            "Ep 2400/5000 | Avg Reward: -9.74 | Avg Length: 17.89 | Terminal Reach: 0.0%\n",
+            "Ep 2500/5000 | Avg Reward: -9.51 | Avg Length: 17.19 | Terminal Reach: 0.0%\n",
+            "Ep 2600/5000 | Avg Reward: -9.47 | Avg Length: 17.06 | Terminal Reach: 0.0%\n",
+            "Ep 2700/5000 | Avg Reward: -12.61 | Avg Length: 20.59 | Terminal Reach: 0.0%\n",
+            "Ep 2800/5000 | Avg Reward: -12.55 | Avg Length: 20.14 | Terminal Reach: 0.0%\n",
+            "Ep 2900/5000 | Avg Reward: -11.29 | Avg Length: 19.15 | Terminal Reach: 0.0%\n",
+            "Ep 3000/5000 | Avg Reward: -10.49 | Avg Length: 18.07 | Terminal Reach: 0.0%\n",
+            "💾 Model checkpoint saved to /content/checkpoints/ppo_model_ep_3000.pth\n",
+            "\n",
+            "--- Entering Phase 4: Fine-tuning (Episode 3001) ---\n",
+            "Ep 3100/5000 | Avg Reward: -10.28 | Avg Length: 17.95 | Terminal Reach: 0.0%\n",
+            "Ep 3200/5000 | Avg Reward: -10.01 | Avg Length: 17.97 | Terminal Reach: 0.0%\n",
+            "Ep 3300/5000 | Avg Reward: -9.99 | Avg Length: 17.79 | Terminal Reach: 0.0%\n",
+            "Ep 3400/5000 | Avg Reward: -9.96 | Avg Length: 17.53 | Terminal Reach: 0.0%\n",
+            "Ep 3500/5000 | Avg Reward: -9.87 | Avg Length: 17.59 | Terminal Reach: 0.0%\n",
+            "Ep 3600/5000 | Avg Reward: -9.85 | Avg Length: 17.75 | Terminal Reach: 0.0%\n",
+            "Ep 3700/5000 | Avg Reward: -9.75 | Avg Length: 17.65 | Terminal Reach: 0.0%\n",
+            "Ep 3800/5000 | Avg Reward: -9.78 | Avg Length: 17.64 | Terminal Reach: 0.0%\n",
+            "Ep 3900/5000 | Avg Reward: -9.59 | Avg Length: 17.14 | Terminal Reach: 0.0%\n",
+            "Ep 4000/5000 | Avg Reward: -9.55 | Avg Length: 17.28 | Terminal Reach: 0.0%\n",
+            "💾 Model checkpoint saved to /content/checkpoints/ppo_model_ep_4000.pth\n",
+            "Ep 4100/5000 | Avg Reward: -9.55 | Avg Length: 17.36 | Terminal Reach: 0.0%\n",
+            "Ep 4200/5000 | Avg Reward: -9.54 | Avg Length: 17.08 | Terminal Reach: 0.0%\n",
+            "Ep 4300/5000 | Avg Reward: -9.44 | Avg Length: 17.16 | Terminal Reach: 0.0%\n",
+            "Ep 4400/5000 | Avg Reward: -9.46 | Avg Length: 17.12 | Terminal Reach: 0.0%\n",
+            "Ep 4500/5000 | Avg Reward: -10.44 | Avg Length: 18.13 | Terminal Reach: 0.0%\n",
+            "Ep 4600/5000 | Avg Reward: -11.29 | Avg Length: 16.88 | Terminal Reach: 0.0%\n",
+            "Ep 4700/5000 | Avg Reward: -13.88 | Avg Length: 17.51 | Terminal Reach: 0.0%\n",
+            "Ep 4800/5000 | Avg Reward: -12.96 | Avg Length: 19.48 | Terminal Reach: 0.0%\n",
+            "Ep 4900/5000 | Avg Reward: -10.96 | Avg Length: 18.83 | Terminal Reach: 0.0%\n",
+            "Ep 5000/5000 | Avg Reward: -10.24 | Avg Length: 18.13 | Terminal Reach: 0.0%\n",
+            "💾 Model checkpoint saved to /content/checkpoints/ppo_model_ep_5000.pth\n",
+            "✅ Training finished.\n",
+            "💾 Final model saved to /content/checkpoints/ppo_model_final.pth\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "%%writefile /content/environment/visualization.py\n",
+        "import matplotlib.pyplot as plt\n",
+        "import numpy as np\n",
+        "from IPython.display import display, clear_output\n",
+        "\n",
+        "class EvolutionVisualizer:\n",
+        "    \"\"\"Handles lightweight rendering for Google Colab using Matplotlib.\"\"\"\n",
+        "    def __init__(self, grid_size, region_bounds):\n",
+        "        self.grid_size = grid_size\n",
+        "        self.region_bounds = region_bounds\n",
+        "        # Initialize the plot. Using plt.ion() allows it to be updated dynamically.\n",
+        "        plt.ion()\n",
+        "        self.fig, self.ax = plt.subplots(figsize=(8, 8))\n",
+        "\n",
+        "    def render(self, state, mode='human'):\n",
+        "        \"\"\"Renders the current state of the environment.\"\"\"\n",
+        "        if mode == 'human':\n",
+        "            # Clear the previous frame\n",
+        "            self.ax.clear()\n",
+        "\n",
+        "            # Create a background grid for the biomes\n",
+        "            vis_grid = np.zeros((self.grid_size, self.grid_size, 3))\n",
+        "\n",
+        "            # Draw Biome Colors\n",
+        "            # Land 1: Light Green\n",
+        "            vis_grid[self.region_bounds[1]['x'][0]:self.region_bounds[1]['x'][1]+1, self.region_bounds[1]['y'][0]:self.region_bounds[1]['y'][1]+1] = [0.6, 0.8, 0.6]\n",
+        "            # Water 1: Light Blue\n",
+        "            vis_grid[self.region_bounds[2]['x'][0]:self.region_bounds[2]['x'][1]+1, self.region_bounds[2]['y'][0]:self.region_bounds[2]['y'][1]+1] = [0.4, 0.6, 0.8]\n",
+        "            # Land 2: Light Brown\n",
+        "            vis_grid[self.region_bounds[3]['x'][0]:self.region_bounds[3]['x'][1]+1, self.region_bounds[3]['y'][0]:self.region_bounds[3]['y'][1]+1] = [0.8, 0.7, 0.5]\n",
+        "            # Water 2: Dark Blue\n",
+        "            vis_grid[self.region_bounds[4]['x'][0]:self.region_bounds[4]['x'][1]+1, self.region_bounds[4]['y'][0]:self.region_bounds[4]['y'][1]+1] = [0.2, 0.3, 0.6]\n",
+        "\n",
+        "            # Draw Food (Yellow)\n",
+        "            for x, y in state['food_locations']:\n",
+        "                vis_grid[x, y] = [1, 1, 0]\n",
+        "\n",
+        "            # Draw Terminal State (Magenta)\n",
+        "            vis_grid[63, 63] = [1, 0, 1]\n",
+        "\n",
+        "            # Draw Agent (Red)\n",
+        "            ax, ay = state['agent_position']\n",
+        "            vis_grid[ax, ay] = [1, 0, 0]\n",
+        "\n",
+        "            # Display the grid (rotated correctly)\n",
+        "            self.ax.imshow(np.rot90(vis_grid), origin='lower')\n",
+        "\n",
+        "            # Add title with key info\n",
+        "            abilities = state.get('evolved_abilities', [])\n",
+        "            ability_str = f\"Fly: {abilities[0]}, Drill: {abilities[1]}, Swim: {abilities[2]}\"\n",
+        "            self.ax.set_title(f\"Step: {state['total_steps']} | Region: {state['current_region']} | Abilities: {ability_str}\")\n",
+        "            self.ax.set_xticks([])\n",
+        "            self.ax.set_yticks([])\n",
+        "\n",
+        "            # Push the update to the display\n",
+        "            display(self.fig)\n",
+        "            clear_output(wait=True)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "h_dQHiz2ovTe",
+        "outputId": "ea0a3a2f-06fa-4a71-b7b7-11117c9ac3a1"
+      },
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Writing /content/environment/visualization.py\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Run this in a new cell after training is complete\n",
+        "import torch\n",
+        "import time\n",
+        "from environment.evolution_world import EvolutionWorldEnv\n",
+        "from agents.ppo_agent import PPOAgent\n",
+        "from environment.visualization import EvolutionVisualizer # We need to import this now!\n",
+        "from IPython.display import clear_output\n",
+        "\n",
+        "# --- Setup ---\n",
+        "env = EvolutionWorldEnv()\n",
+        "device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n",
+        "\n",
+        "# Dummy config, only a few params are needed for loading\n",
+        "ppo_config = {'learning_rate': 0, 'gamma': 0, 'gae_lambda': 0, 'clip_range': 0,\n",
+        "              'n_epochs': 0, 'ent_coef': 0, 'vf_coef': 0, 'max_grad_norm': 0, 'batch_size': 0}\n",
+        "\n",
+        "agent = PPOAgent(env.action_space.n, ppo_config, device)\n",
+        "\n",
+        "# --- Load the Trained Brain ---\n",
+        "model_path = '/content/checkpoints/ppo_model_final.pth'\n",
+        "agent.load_model(model_path)\n",
+        "agent.policy.eval() # Set the network to evaluation mode\n",
+        "\n",
+        "# --- Run a Visual Episode ---\n",
+        "print(\"🎬 Running visual inference with the trained agent...\")\n",
+        "state = env.reset()\n",
+        "done = False\n",
+        "visualizer = EvolutionVisualizer(env.grid_size, env.region_bounds)\n",
+        "\n",
+        "while not done:\n",
+        "    action, _, _ = agent.select_action(state)\n",
+        "    state, _, done, info = env.step(action)\n",
+        "\n",
+        "    # Combine the state dict with other necessary info for rendering\n",
+        "    render_state = {**info, 'food_locations': env.food_manager.food_locations, 'total_steps': env.total_steps}\n",
+        "    visualizer.render(render_state, mode='human')\n",
+        "    time.sleep(0.1) # Slow down for visibility\n",
+        "\n",
+        "print(\"🏁 Episode finished.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 693
+        },
+        "id": "SZrEPdr1oVQ6",
+        "outputId": "63773958-d6e2-4da0-b8fc-3cd695fbae99"
+      },
+      "execution_count": 16,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "🏁 Episode finished.\n"
+          ]
+        },
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<Figure size 800x800 with 1 Axes>"
+            ],
+            "image/png": "iVBORw0KGgoAAAANSUhEUgAAAnwAAAKSCAYAAABIowakAAAAOnRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjEwLjAsIGh0dHBzOi8vbWF0cGxvdGxpYi5vcmcvlHJYcgAAAAlwSFlzAAAPYQAAD2EBqD+naQAALxJJREFUeJzt3XmUVOWd+OFv0wiNLK0oCIJhaUEFGYzgGhAwQdzCqAEENQioYFyIZsQlk4yauBHEAYIbajQDmDgoRI1GDYqRKC4xiokRB1QMQUUEBQQUoe/vD0/Xj6IbaKBb4PV5zuEc+vatqrdvVXd96ta9bxVkWZYFAADJqrG9BwAAQPUSfAAAiRN8AACJE3wAAIkTfAAAiRN8AACJE3wAAIkTfAAAiRN8AACJE3zk6d69ewwaNGh7D2OzunfvHt27d9/ew6gy8+fPj4KCgnj66aer9HqvuuqqKCgoiI8++miz67Zs2TLvvn/66afLjWnQoEHRsmXLLbrtncU999wTBQUFMX/+/O09lM0qKCiIq666ansPo8pt+HNVdJ+k9ru/o0j1McX/97UIvr/97W/Rp0+faNGiRRQVFUWzZs2iZ8+e8ctf/jJvveuuuy5+97vfbZ9BbsKbb74ZF198cRx55JFRVFS0ySelzz77LK6//vpo165d7LrrrtGsWbPo27dvvP7661U6prI/xGX/atasGc2aNYtBgwbFwoULq/S2dgZPPvlkDBkyJNq2bRu77rprtG7dOs4+++x4//33q/V2Dz300CgoKIhbb721Wm9nY1atWhVXXXVVlYdqVWvZsmXe43X9f5999tlXMoayqK/o3+GHH/6VjKGqde/ePfcz1KhRIxo0aBD77bdffP/7348//vGP23t4edYf66b+7ajRs3jx4vjhD38Y+++/f9SpUycaN24chx56aFx22WXx6aefbu/hbbWd/X7ZmdTc3gOobs8991z06NEjvvGNb8Q555wTTZo0iQULFsTzzz8fY8eOjQsvvDC37nXXXRd9+vSJk046afsNuAKzZs2KcePGRbt27eKAAw6IV199daPrnn766fHQQw/FOeecEwcffHC89957cfPNN8cRRxwRf/vb36JFixZVOraf/exn0apVq/jss8/i+eefj3vuuSf+/Oc/x9///vcoKiqq0tta3xNPPFFt1701Lrvssli6dGn07ds32rRpE2+//XaMHz8+fv/738err74aTZo0qfLbnDt3brz00kvRsmXLmDx5cvzgBz/Yput78803o0aNTb8GvOOOO6K0tDT39apVq+Lqq6+OiCi31+UnP/lJXH755ds0pqp00EEHxX/8x3+UW16rVq2vdBwDBgyI448/Pm9Zo0aNvtIxVKXmzZvH9ddfHxERK1eujHnz5sXUqVNj0qRJ0a9fv5g0aVLssssulbqu1atXR82a1fO09J//+Z9x9tln575+6aWXYty4cfHjH/84DjjggNzyf/u3f6uW298WS5cujc6dO8fy5ctjyJAhsf/++8eSJUvitddei1tvvTV+8IMfRL169bbpNqpz22/Kzny/7GySD75rr702iouL46WXXorddtst73sffvjh9hnUFurdu3d88sknUb9+/bjxxhs3GnwLFy6MqVOnxiWXXBKjRo3KLe/atWscffTRMXXq1Lj44ourdGzHHXdcdO7cOSIizj777Nhzzz1j5MiR8dBDD0W/fv2q9LbW91U/SW/OTTfdFF26dMkLpmOPPTa6desW48ePj2uuuabKb3PSpEnRuHHjGD16dPTp0yfmz59f6bdbK1K7du3NrlPZJ+6IiJo1a26XJ5CNadasWZxxxhnbexhx8MEH7xDjqCrFxcXlfp4bbrghhg8fHrfccku0bNkyRo4cudHLl5aWxpo1a6KoqKhaXyT27Nkz7+uioqIYN25c9OzZc5NvEa9cuTLq1q1bbeOqjLvuuiv++c9/xrPPPhtHHnlk3veWL19eJX8Pq3Pbb8rOfL/sbJJ/S/ett96K9u3bl4u9iIjGjRvn/l9QUBArV66MX//617ldyOsfz7Rw4cIYMmRI7LXXXlG7du1o3759/OpXv8q7vrJjnu6777748Y9/HE2aNIm6detG7969Y8GCBXnrrlq1KubMmVOpY6saNmwY9evX3+x6K1asiIiIvfbaK29506ZNIyKiTp06m72ObdW1a9eI+HK7r2/OnDnRp0+faNiwYRQVFUXnzp3joYceKnf51157Lbp16xZ16tSJ5s2bxzXXXBN33313pY7j+fDDD+Oss86KvfbaK4qKiqJjx47x61//Om+dsrfVbrzxxpgwYUKUlJRE7dq145BDDomXXnopb90vvvgi5syZU6m3ZY866qhye8eOOuqoaNiwYbzxxhubvfzWuPfee6NPnz5x4oknRnFxcdx7770bXfejjz6Kfv36RYMGDWKPPfaIH/7wh+XeytzwGL6KrH8M3/z583N7pq6++upyb71s7Bi+SZMmRadOnaJOnTrRsGHD6N+/f7nfj7lz58b3vve9aNKkSRQVFUXz5s2jf//+sWzZsryfac6cObFq1apNjnlrnXnmmbHnnnvGF198Ue57xxxzTOy3334REfHPf/4z5syZs823t2bNmviv//qv6NSpUxQXF0fdunWja9euMWPGjM1edsWKFXHRRRdFy5Yto3bt2tG4cePo2bNn/PWvf81b74UXXohjjz02iouLY9ddd41u3brFs88+u81j31BhYWHuXYnx48fn3W8FBQVxwQUXxOTJk6N9+/ZRu3bteOyxx3Lf25q37qrqPih7zP7jH/+I0047LXbffffo0qVLRGz82MGKjmstLS2NMWPGRPv27aOoqCj22muvGDZsWHz88cdbNa633norCgsLK3zrv0GDBrlYGzduXBQWFsYnn3yS+/7o0aOjoKAgfvSjH+WWrVu3LurXrx+XXXZZbtmG275sW/zf//1fnHHGGVFcXByNGjWKn/70p5FlWSxYsCD+/d//PRo0aBBNmjSJ0aNHlxtb6vfLzib54GvRokW8/PLL8fe//32T602cODFq164dXbt2jYkTJ8bEiRNj2LBhERGxaNGiOPzww2P69OlxwQUXxNixY2PfffeNs846K8aMGVPuuq699tp45JFH4rLLLovhw4fHH//4x/jOd74Tq1evzq3z4osvxgEHHBDjx4+vsp+1pKQkmjdvHqNHj46HH344/vWvf8WLL74Y5557brRq1Sr69+9fZbe1MWVRtvvuu+eWvf7663H44YfHG2+8EZdffnmMHj066tatGyeddFJMmzYtt97ChQujR48e8frrr8cVV1wRF198cUyePDnGjh272dtdvXp1dO/ePSZOnBinn356jBo1KoqLi2PQoEEVXv7ee++NUaNGxbBhw+Kaa66J+fPnxymnnJL35L5w4cI44IAD4oorrtiqbfHpp5/Gp59+GnvuuedWXX5TXnjhhZg3b14MGDAgatWqFaecckpMnjx5o+v369cvd3zn8ccfH+PGjYuhQ4du0xgaNWqUO3bw5JNPzv3enHLKKRu9zLXXXhsDBw6MNm3axE033RQXXXRRPPnkk3HUUUflnqTWrFkTvXr1iueffz4uvPDCuPnmm2Po0KHx9ttv5z2RjR8/Pg444IB48cUXKzXeL774Ij766KO8f5uKxe9///uxZMmSePzxx/OWf/DBB/HUU0/l9moNHDgw762nzVm1alW5cXzxxRexfPnyuPPOO6N79+4xcuTIuOqqq2Lx4sXRq1evTR7GERFx7rnnxq233hrf+9734pZbbolLLrkk6tSpk/di46mnnoqjjjoqli9fHldeeWVcd9118cknn8TRRx9d6W24JQoLC2PAgAGxatWq+POf/5z3vaeeeiouvvjiOPXUU2Ps2LHbtGc6Ysvvg83p27dvrFq1Kq677ro455xztvjyw4YNixEjRsS3vvWtGDt2bAwePDgmT54cvXr1qvAFxOa0aNEi1q1bFxMnTtzkel27do3S0tK87T1z5syoUaNGzJw5M7fslVdeiU8//TSOOuqozd72qaeeGqWlpXHDDTfEYYcdFtdcc02MGTMmevbsGc2aNYuRI0fGvvvuG5dcckk888wzeZdN/X7Z6WSJe+KJJ7LCwsKssLAwO+KII7JLL700e/zxx7M1a9aUW7du3brZmWeeWW75WWedlTVt2jT76KOP8pb3798/Ky4uzlatWpVlWZbNmDEji4isWbNm2fLly3Pr/e///m8WEdnYsWNzy8rWvfLKK7fo5xk1alQWEdk777xT4fdfeOGFrKSkJIuI3L9OnTpl77//fqWuv1u3bhVugw3dfffdWURk06dPzxYvXpwtWLAgu//++7NGjRpltWvXzhYsWJBb99vf/nbWoUOH7LPPPsstKy0tzY488sisTZs2uWUXXnhhVlBQkL3yyiu5ZUuWLMkaNmxY7mfu1q1b1q1bt9zXY8aMySIimzRpUm7ZmjVrsiOOOCKrV69e7v545513sojI9thjj2zp0qW5dR988MEsIrKHH344t6xs3cpsj4r8/Oc/zyIie/LJJze7btltzZgxo1LXfcEFF2T77LNPVlpammXZl4/ziMjbdlmWZVdeeWUWEVnv3r3zlp933nlZRGSzZ8/OLWvRokXez1r2GF1/TGeeeWbWokWL3NeLFy/e6OO47LbLzJ8/PyssLMyuvfbavPX+9re/ZTVr1swtf+WVV7KIyKZMmbLJbVB2/ZXZZi1atMj7nSj7t/64yx7TZY+zdevWZc2bN89OPfXUvOu66aabsoKCguztt9/OsuzLx2Jl/pSW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SZNi0KBBcdJJJ8WIESOicePGUVhYGNdff325k6A21K9fv+jatWtMmzYtnnjiiRg1alSMHDkypk6dGscdd1zu93DUqFF5e9DXt63TelSk7NjpDX/Hv4oTyLZFReMrKCio8O/DunXr8r4uLS3d5N72bZ2Cp6CgINq2bRtt27aNE044Idq0aROTJ0/OBV+XLl3iiy++iFmzZsXMmTNz71507do1Zs6cGXPmzInFixfnlm9ORb+r1fX3c3N25PtlZ/C1Cr71lUXK+mdgVvQk2KhRo6hfv36sW7eu0nsHyl5Nl8myLObNm1ftYbho0aKIKP9Az7Is1q1bF2vXrq3W2y97curRo0eMHz8+Lr/88twehl122WWz269FixZ5e6zKVLSsosu+9tprUVpamrd3q+wMsaqef7AiS5YsiWOOOSY+//zzePLJJ3NnR1ellStXxoMPPhinnnpq9OnTp9z3hw8fHpMnTy4XfHPnzs17dTxv3rwoLS3d5oPltyQcS0pKIsuyaNWqVbRt23az63fo0CE6dOgQP/nJT+K5556Lb33rW3HbbbdVyxQ3mzJw4MD40Y9+FO+//37ce++9ccIJJ1T5nrCIiPvvvz9at24dU6dOzduum3pBur6mTZvGeeedF+edd158+OGHcfDBB8e1114bxx13XJSUlETEl2d0bulezq21bt26uPfee2PXXXfNnVG5M9t9993LvWUZUf7dg5KSkpg+fXp861vfqvawbd26dey+++55z2OHHnpo1KpVK2bOnBkzZ86MESNGRMSXswbccccd8eSTT+a+TsGOeL/sqJI/hm/GjBkV1n/ZsUtlUytERNStWzfvLMCILyPme9/7XjzwwAMVnum7ePHicsv+53/+J++Ylfvvvz/ef//9OO6443LLtmRalsoqexL97W9/m7f8oYceipUrV8Y3v/nNKrutjenevXsceuihMWbMmPjss8+icePG0b1797j99tsrnN5k/e3Xq1evmDVrVt4ZiUuXLt3k2adljj/++Pjggw/ivvvuyy1bu3Zt/PKXv4x69epFt27dtvhn2ZJpWVauXBnHH398LFy4MB599NGNvm25raZNmxYrV66M888/P/r06VPu34knnhgPPPBAfP7553mXu/nmm/O+LvuUmfUfk1tj1113jYgo93tTkVNOOSUKCwvj6quvLvc7mWVZ7u2g5cuXl3tx0qFDh6hRo0bez1Xd07KUGTBgQBQUFMQPf/jDePvtt8vNOVdVU0+U7TVZf9u88MILueOuNmbdunV5055EfDnl1N57753bXp06dYqSkpK48cYbK/xUhor+jm2LdevWxfDhw+ONN96I4cOHR4MGDar0+jdUVffBppSUlOT2jpWZPXt2uWlt+vXrF+vWrYuf//zn5a5j7dq1lfpd2dALL7wQK1euLLf8xRdfjCVLluQ9jxUVFcUhhxwSv/nNb+Kf//xn3h6+1atXx7hx46KkpKRaXpBuKPX7ZWeT/B6+Cy+8MFatWhUnn3xy7L///rFmzZp47rnn4r777ouWLVvG4MGDc+t26tQppk+fHjfddFPsvffe0apVqzjssMPihhtuiBkzZsRhhx0W55xzTrRr1y6WLl0af/3rX2P69OmxdOnSvNts2LBhdOnSJQYPHhyLFi2KMWPGxL777pt3GvmLL74YPXr0iCuvvHKzJ24sW7Ys9wRd9iAeP3587LbbbrHbbrvFBRdcEBER3/3ud6N9+/bxs5/9LN599904/PDDY968eTF+/Pho2rRp3kG21WnEiBHRt2/fuOeee+Lcc8+Nm2++Obp06RIdOnSIc845J1q3bh2LFi2KWbNmxb/+9a+YPXt2RERceumlMWnSpOjZs2dceOGFUbdu3bjzzjvjG9/4RixdunSTe5OGDh0at99+ewwaNChefvnlaNmyZdx///3x7LPPxpgxY7bqrdWyaVnOPPPMzZ64cfrpp8eLL74YQ4YMiTfeeCNvOox69epV2ae3TJ48OfbYY49yk6+W6d27d9xxxx3xyCOP5E2P8s4770Tv3r3j2GOPjVmzZsWkSZPitNNOi44dO27TeOrUqRPt2rWL++67L9q2bRsNGzaMAw88MA488MBy65aUlMQ111wTV1xxRcyfPz9OOumkqF+/frzzzjsxbdq0GDp0aFxyySXx1FNPxQUXXBB9+/aNtm3bxtq1a2PixIm5F19lxo8fH1dffXXMmDGjWj9btVGjRnHsscfGlClTYrfddosTTjgh7/sDBw6MP/3pT9v8dtaJJ54YU6dOjZNPPjlOOOGEeOedd+K2226Ldu3abfKjs1asWBHNmzePPn36RMeOHaNevXoxffr0eOmll3Jzo9WoUSPuvPPOOO6446J9+/YxePDgaNasWSxcuDBmzJgRDRo0iIcffjh3nQUFBdGtW7dKfWTesmXLYtKkSRHx5QvZsk/aeOutt6J///4VPsFWtaq6DzZlyJAhcdNNN0WvXr3irLPOig8//DBuu+22aN++fSxfvjy3Xrdu3WLYsGFx/fXXx6uvvhrHHHNM7LLLLjF37tyYMmVKjB07Nrd3/p577onBgwfH3Xffvck5MCdOnBiTJ0+Ok08+OTp16hS1atWKN954I371q19FUVFR/PjHP85bv2vXrnHDDTdEcXFxdOjQISK+fBGw3377xZtvvvmVfV76znq/JOsrOht4u/nDH/6QDRkyJNt///2zevXqZbVq1cr23Xff7MILL8wWLVqUt+6cOXOyo446KqtTp0656TgWLVqUnX/++dk+++yT7bLLLlmTJk2yb3/729mECRNy65RNY/Gb3/wmu+KKK7LGjRtnderUyU444YTs3XffzbutLZmWZVPTOax/2nmWZdnSpUuziy++OGvbtm1Wu3btbM8998z69++fm0Jic7Z0WpaXXnqp3PfWrVuXlZSUZCUlJdnatWuzLMuyt956Kxs4cGDWpEmTbJdddsmaNWuWnXjiidn999+fd9lXXnkl69q1a1a7du2sefPm2fXXX5+NGzcui4jsgw8+yBvnhqfiL1q0KBs8eHC25557ZrVq1co6dOiQ3X333XnrlG3LUaNGlRv3hvfHlkzLsrFpPyq6jypSmWlZFi1alNWsWTP7/ve/v9F1Vq1ale26667ZySefnGXZ/5/O4B//+EfWp0+frH79+tnuu++eXXDBBdnq1avL/QxbOi1LlmXZc889l3Xq1CmrVatW3jbccFqWMg888EDWpUuXrG7dulndunWz/fffPzv//POzN998M8uyLHv77bezIUOGZCUlJVlRUVHWsGHDrEePHtn06dPzrmdLp2U54YQTNrlORVOAlCmbWmn9KSrKbOm0LBU99rLsyyk0rrvuuqxFixZZ7dq1s29+85vZ73//+wq3+frb+fPPP89GjBiRdezYMatfv35Wt27drGPHjtktt9xS7jZeeeWV7JRTTsn22GOPrHbt2lmLFi2yfv365U0dtGLFiiwisv79+2/2Zyr72cv+1atXL2vTpk12xhlnZE888USFl4mIjU4hs+Hv4PaalmXx4sUVXmbSpElZ69ats1q1amUHHXRQ9vjjj1d4/2RZlk2YMCHr1KlTVqdOnax+/fpZhw4d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ABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABJXc3sPANY3tNOwSq034eXbq3kkAJAOe/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEif4AAAS55M22KH4BA0AqHr28AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACRO8AEAJE7wAQAkTvABACSu5pasfNAHH0S9XWtX11gAvhITHt7eIwDYduu+WF3pde3hAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASJzgAwBInOADAEic4AMASFzN7T0AAADy/eX3Qze7zvJYHsVxUaWuzx4+AIDECT4AgMQJPgCAxAk+AIDECT4AgMQJPgCAxAk+AIDECT4AgMRVauLlLMsiImLlqs+rdTAAX4V1X6ze3kMA2KTlsbzS65R12qYUZJVY61//+lfss88+lRgeAABfpQULFkTz5s03uU6lgq+0tDTee++9qF+/fhQUFFTZAAEA2DpZlsWKFSti7733jho1Nn2UXqWCDwCAnZeTNgAAEif4AAASJ/gAABIn+AAAEif4AAASJ/gAABIn+AAAEvf/AECce0Du6Q6xAAAAAElFTkSuQmCC\n"
+          },
+          "metadata": {}
+        }
+      ]
+    }
+  ]
+}
